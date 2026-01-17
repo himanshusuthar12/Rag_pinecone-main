@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  rag-api:
+    build: .
+    container_name: rag-pinecone-api
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME}
+      - PINECONE_CLOUD=${PINECONE_CLOUD:-aws}
+      - PINECONE_REGION=${PINECONE_REGION:-us-east-1}
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - CONFIG_TABLE_NAME=${CONFIG_TABLE_NAME:-aiChatbot001}
+      - HISTORY_FILE=${HISTORY_FILE:-chat_history.json}
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      # Mount database file if using SQLite
+      - ./aiChatbot001.db:/app/aiChatbot001.db:rw
+      # Mount history file directory
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
